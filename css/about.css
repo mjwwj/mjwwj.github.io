@@ -198,7 +198,7 @@ a:focus {
 }
 
 #welcome {
-    width: 600px;
+    width: 650px;
     text-align: center;
     font-size: 40px;
     line-height: 1;
@@ -460,9 +460,16 @@ a:focus {
 
 #back {
     width: 700px;
-    padding-bottom: 500px;
+    padding-bottom: 100px;
 
-    background: url(https://image.xiaomo.info/logo/pic.png) no-repeat bottom right;
+    /*background: url(http://upd.everglamming.com:8089/group1/M00/00/1B/wKgAHFtTDWCAXdfRAAKRHg7Ci5Q566.png) no-repeat bottom right;*/
+}
+
+#back img {
+    width: 260px;
+    height: 360px;
+    float: right;
+    margin-top: 20px; 
 }
 
 #overview { display: none }
