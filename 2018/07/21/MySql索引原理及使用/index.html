@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Xiao Ma Ge" />
+
+
+
+<meta name="description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
+<meta name="keywords" content="MySql,数据库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySql索引原理及使用">
+<meta property="og:url" content="http://localhost:4000/2018/07/21/MySql索引原理及使用/index.html">
+<meta property="og:site_name" content="Xiao Ma Ge">
+<meta property="og:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png">
+<meta property="og:updated_time" content="2018-07-21T06:42:07.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySql索引原理及使用">
+<meta name="twitter:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
+<meta name="twitter:image" content="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Xiao Ma Ge" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1511883499747&di=40ab57d794293bc93bcc0c59746d23ca&imgtype=0&src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>MySql索引原理及使用 | Xiao Ma Ge</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Xiao Ma Ge</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一个被代码迭代的舞者</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>个人签名</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySql/">MySql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/angular/">angular</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">代码发动机</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一个被代码迭代的舞者</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="个人签名"/>
+</nav>
+      <div class="body-wrap"><article id="post-MySql索引原理及使用" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/07/21/MySql索引原理及使用/" class="article-date">
+      <time datetime="2018-07-21T06:04:51.000Z" itemprop="datePublished">2018-07-21</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      MySql索引原理及使用
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/MySql/">MySql</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySql/">MySql</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。<br><a id="more"></a></p>
+<h2 id="索引简介"><a href="#索引简介" class="headerlink" title="索引简介"></a>索引简介</h2><p>索引是一个单独的、存储在磁盘上的数据库结构，他们包含着对数据表里所有记录的引用指针。使用索引用于快速找出在某个或者多个列中有一特定值的行，所有MySQL列类型都可以被索引，对于相关列使用索引是提高查询操作速度的最佳途径。</p>
+<p><strong>索引的优点：</strong></p>
+<p>1.通过创建唯一索引，可以保证数据库表中每一行数据的唯一性。</p>
+<p>2.可以大大加快数据的查询速度，这也是创建索引的最主要原因。</p>
+<p>3.在实现数据的参考完整性方面，可以加速表与表之间的连接。</p>
+<p>4.在使用分组和排序字句进行数据查询时，也可以显著减少查询中分组和排序的时间。</p>
+<p><strong>索引的缺点：</strong></p>
+<p>1.创建和维护索引要耗费时间，数据量越大耗费时间也会越长。</p>
+<p>2.索引需要占磁盘空间，除了数据表占数据空间外，每一个索引还要占一定的物理空间，如果有大量的索引，索引文件可能比数据文件更快达到最大文件尺寸。</p>
+<p>3.当对表中的数据进行增加、删除和修改的时候，索引也要动态的维护，这样就降低了数据的维护速度。</p>
+<h2 id="索引的原理"><a href="#索引的原理" class="headerlink" title="索引的原理"></a>索引的原理</h2><p><strong>一 索引原理</strong><br>索引的目的在于提高查询效率，与我们查阅图书所用的目录是一个道理：先定位到章，然后定位到该章下的一个小节，然后找到页数。相似的例子还有：查字典，查火车车次，飞机航班等</p>
+<p>本质都是：通过不断地缩小想要获取数据的范围来筛选出最终想要的结果，同时把随机的事件变成顺序的事件，也就是说，有了这种索引机制，我们可以总是用同一种查找方式来锁定数据。</p>
+<p>数据库也是一样，但显然要复杂的多，因为不仅面临着等值查询，还有范围查询(&gt;、&lt;、between、in)、模糊查询(like)、并集查询(or)等等。数据库应该选择怎么样的方式来应对所有的问题呢？我们回想字典的例子，能不能把数据分成段，然后分段查询呢？最简单的如果1000条数据，1到100分成第一段，101到200分成第二段，201到300分成第三段……这样查第250条数据，只要找第三段就可以了，一下子去除了90%的无效数据。但如果是1千万的记录呢，分成几段比较好？稍有算法基础的同学会想到搜索树，其平均复杂度是lgN，具有不错的查询性能。但这里我们忽略了一个关键的问题，复杂度模型是基于每次相同的操作成本来考虑的。而数据库实现比较复杂，一方面数据是保存在磁盘上的，另外一方面为了提高性能，每次又可以把部分数据读入内存来计算，因为我们知道访问磁盘的成本大概是访问内存的十万倍左右，所以简单的搜索树难以满足复杂的应用场景。</p>
+<p> <strong>二 磁盘IO与预读</strong></p>
+<p>考虑到磁盘IO是非常高昂的操作，计算机操作系统做了一些优化，当一次IO时，不光把当前磁盘地址的数据，而是把相邻的数据也都读取到内存缓冲区内，因为局部预读性原理告诉我们，当计算机访问一个地址的数据的时候，与其相邻的数据也会很快被访问到。每一次IO读取的数据我们称之为一页(page)。具体一页有多大数据跟操作系统有关，一般为4k或8k，也就是我们读取一页内的数据时候，实际上才发生了一次IO，这个理论对于索引的数据结构设计非常有帮助。</p>
+<p><strong>三、索引的数据结构</strong><br>任何一种数据结构都不是凭空产生的，一定会有它的背景和使用场景，我们现在总结一下，我们需要这种数据结构能够做些什么，其实很简单，那就是：每次查找数据时把磁盘IO次数控制在一个很小的数量级，最好是常数数量级。那么我们就想到如果一个高度可控的多路搜索树是否能满足需求呢？就这样，b+树应运而生。</p>
+<p><img src="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png" alt=""></p>
+<p>如上图，是一颗b+树，关于b+树的定义可以参见B+树，这里只说一些重点，浅蓝色的块我们称之为一个磁盘块，可以看到每个磁盘块包含几个数据项（深蓝色所示）和指针（黄色所示），如磁盘块1包含数据项17和35，包含指针P1、P2、P3，P1表示小于17的磁盘块，P2表示在17和35之间的磁盘块，P3表示大于35的磁盘块。真实的数据存在于叶子节点即3、5、9、10、13、15、28、29、36、60、75、79、90、99。非叶子节点只不存储真实的数据，只存储指引搜索方向的数据项，如17、35并不真实存在于数据表中。</p>
+<p><strong>b+树的查找过程</strong></p>
+<p>如图所示，如果要查找数据项29，那么首先会把磁盘块1由磁盘加载到内存，此时发生一次IO，在内存中用二分查找确定29在17和35之间，锁定磁盘块1的P2指针，内存时间因为非常短（相比磁盘的IO）可以忽略不计，通过磁盘块1的P2指针的磁盘地址把磁盘块3由磁盘加载到内存，发生第二次IO，29在26和30之间，锁定磁盘块3的P2指针，通过指针加载磁盘块8到内存，发生第三次IO，同时内存中做二分查找找到29，结束查询，总计三次IO。真实的情况是，3层的b+树可以表示上百万的数据，如果上百万的数据查找只需要三次IO，性能提高将是巨大的，如果没有索引，每个数据项都要发生一次IO，那么总共需要百万次的IO，显然成本非常非常高。</p>
+<p><strong>b+树性质</strong><br>1.索引字段要尽量的小：通过上面的分析，我们知道IO次数取决于b+数的高度h，假设当前数据表的数据为N，每个磁盘块的数据项的数量是m，则有h=㏒(m+1)N，当数据量N一定的情况下，m越大，h越小；而m = 磁盘块的大小 / 数据项的大小，磁盘块的大小也就是一个数据页的大小，是固定的，如果数据项占的空间越小，数据项的数量越多，树的高度越低。这就是为什么每个数据项，即索引字段要尽量的小，比如int占4字节，要比bigint8字节少一半。这也是为什么b+树要求把真实的数据放到叶子节点而不是内层节点，一旦放到内层节点，磁盘块的数据项会大幅度下降，导致树增高。当数据项等于1时将会退化成线性表。</p>
+<h2 id="索引的分类"><a href="#索引的分类" class="headerlink" title="索引的分类"></a>索引的分类</h2><p>索引是在存储引擎中实现的，因此，每种存储引擎的索引都不一定完全相同，并且每种存储引擎也不一定支持所有索引类型。根据存储引擎定义每个表的最大索引数和最大索引长度。所有的存储引擎支持每个表至少16个索引，总长度至少为256字节，大多数存储引擎有更高的限制。MySQL中索引的存储类型有两种：Btree和hash，具体和表的存储引擎相关；MyISAM和InnoDB存储引擎只支持Btree索引，MEMORY/HEAP存储引擎可以支持hash和Btree索引。</p>
+<p><strong>MySQL索引的分类：</strong></p>
+<p>1.普通索引：MySQL的基本索引类型，允许索引字段的列插入重复值和空值。</p>
+<p>2.唯一索引：索引列字段必须唯一，但允许有空值，如果是组合索引，则组合必须唯一，主键索引是一种特殊的唯一索引，不允许有空值。</p>
+<p>3.单列索引和组合索引：单列索引只包含单个列，一个表可以有多个单列索引。组合索引指在表的多个字段组合上创建索引，使用组合索引时遵循最左前缀集合。</p>
+<p>4.全文索引：全文索引类型为FullText，在定义索引的列上支持值得全文查找，允许在这些索引列中插入重复值和空置，全文索引可以在char、varchar和text类型的列上创建，MySQL中只有MyISAM存储引擎支持全文索引。</p>
+<p>5.空间索引：空间索引是对空间数据类型的字段建立的索引，只能在MyISAM存储引擎的表中创建。</p>
+<h2 id="索引创建"><a href="#索引创建" class="headerlink" title="索引创建"></a>索引创建</h2><p><strong>创建表的时候创建索引</strong></p>
+<p>语法结构：</p>
+<p>CREATE TABLE table_name [col_name data_type]</p>
+<p>[UNIQUE | FULLTEXT | SPATITAL] [INDEX | KEY] [index_name] (col_name [length]) [ASC | DESC]</p>
+<p><strong>1.创建普通索引</strong></p>
+<p>最基本的索引类型，没有唯一性之类的限制，其作用只是加快对数据库的访问速度。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE book</span><br><span class="line">(</span><br><span class="line">book_id                        INT NOT NULL,</span><br><span class="line">book_name                      VARCHAR(255) NOT NULL,</span><br><span class="line">info                           VARCHAR(255) NOT NULL,</span><br><span class="line">INDEX(info)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>没有指定索引名称时会默认使用索引字段作为索引名称，此处为给字段info创建名称为info索引。</p>
+<p><strong>2.创建唯一索引</strong></p>
+<p>创建唯一索引的主要原因是减少查询索引列操作的执行时间，尤其是对比较庞大的数据表，它与前面的普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t1</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">UNIQUE INDEX UniqIdx(id)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>此处为给id字段创建一个名为UniqIdx的唯一索引。</p>
+<p><strong>3.创建单列索引</strong></p>
+<p>单列索引是在数据表中某一个字段上创建的索引，一个表中可以创建多个单列索引，前面两个例子创建的都为单列索引<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t2</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NULL,</span><br><span class="line">INDEX SingleIdx(name(20))</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>此处为给name字段创建一个名为SingleIdx的单列索引，索引长度为20。</p>
+<p><strong>4.创建组合索引</strong></p>
+<p>组合索引是在多个字段上创建一个索引<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t3</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">age                       INT NOT NULL,                      </span><br><span class="line">info                      VARCHAR(255),</span><br><span class="line">INDEX MultiIdx(id, name, age(100))</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>此处为给id,name和age字段创建一个名为MultiIdx的组合索引。</p>
+<p>组合索引可起几个索引的作用，但必须遵从“最左前缀”：利用索引中最左边的列集来匹配行。例如这里又id，name和age 3个字段构成的索引，索引行中按id/name/age的顺序存放，索引可以搜索下面字段组合：（id，name，age）、(id，name) 或者 id。如果列不构成索引最左面的前缀，MySQL不能使用局部索引，如（age）或者（name，age）组合则不能使用索引查询。</p>
+<p><strong>5.创建全文索引</strong></p>
+<p>FullText（全文索引）可以用于全文搜索。只有MyISAM存储引擎支持FullText索引，并且只为CHAR、VARCHAR和TEXT列创建索引。索引总是对整个列进行，不支持局部（前缀）索引。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t4</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">age                       INT NOT NULL,                      </span><br><span class="line">info                      VARCHAR(255),</span><br><span class="line">FULLTEXT INDEX FullTxtIdx(info)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p>此处为给info字段创建一个名为FullTxtIdx的组合索引，索引长度为20，全文索引非常适合于大型数据集，对于小的数据集，它的用处比较小。</p>
+<p><strong>6.创建空间索引</strong></p>
+<p>空间索引必须在MyISAM类型的表中创建，且空间类型的字段必须为非空。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t5</span><br><span class="line">(</span><br><span class="line">g                        GEOMETRY NOT NULL,</span><br><span class="line">SPATIAL                  INDEX spatIdx(g)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p>此处为g字段上创建了名为spatIdx的空间索引，注意创建时指定空间类型字段值的非空约束，并且表的存储引擎为MyISAM。</p>
+<p><strong>在已经存在的表上创建索引</strong></p>
+<p><strong>1.使用 ALTER TABLE 语句创建索引</strong></p>
+<p>语法结构：</p>
+<p>ALTER TABLE table_name ADD [UNIQUE | FULLTEXT | SPATIAL] [INDEX | KEY]</p>
+<p>[index_name] (col_name[length],…) [ASC | DESC]</p>
+<p>例如：使用ALTER TABLE在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE book ADD INDEX BkNameIdx(bookname(30));</span><br></pre></td></tr></table></figure></p>
+<p>其他类型的索引只需将INDEX换成其他类型即可如：UNIQUE INDEX，FULLTEXT INDEX，SPATIAL INDEX。</p>
+<p><strong>2.使用 CREATE INDEX 创建索引</strong></p>
+<p>语法结构：</p>
+<p>CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name</p>
+<p>ON table_name (col_name[length],…) [ASC | DESC]</p>
+<p>例如：使用CREATE INDEX在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX BkNameIdx ON book(bookname)</span><br></pre></td></tr></table></figure></p>
+<p>其他类型的索引只需将INDEX换成其他类型即可如：UNIQUE INDEX，FULLTEXT INDEX，SPATIAL INDEX。</p>
+<p><strong>删除索引</strong><br><strong>1.使用ALTER TABLE删除索引</strong></p>
+<p>语法结构：ALTER TABLE table_name DROP INDEX index_name;</p>
+<p><strong>2.使用DROP INDEX语句删除索引</strong></p>
+<p>语法结构：DROP INDEX index_name ON table_name;</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>为数据库选择正确的索引是一项复杂的任务，如果索引列较少，则需要的磁盘空间和维护开销都较少。如果在一个大表上创建了多种组合索引，索引文件也会膨胀很快。另一方面，索引较多可覆盖更多的查询，可能需要实验若干不同的设计，才能找到最有效的索引。对字符串类型的字段进行索引，如果可能应该指定一个前缀长度。例如，如果有个CHAR(255)的列，在前10个或者30个字符内，多数值是惟一的，则不需要对整个列进行索引，短索引不仅可以提高查询速度而且可以节省磁盘空间、减少I/O操作，因此如何更好的使用索引，还需要我们在实际中多尝试多测验。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
+        <p><span>发布时间:</span>2018-07-21, 14:04:51</p>
+        <p><span>最后更新:</span>2018-07-21, 14:42:07</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/07/21/MySql索引原理及使用/" title="MySql索引原理及使用">http://localhost:4000/2018/07/21/MySql索引原理及使用/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/07/21/MySql索引原理及使用/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2015/12/03/AngularValidate/">
+                    Hello World
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#索引简介"><span class="toc-number">1.</span> <span class="toc-text">索引简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#索引的原理"><span class="toc-number">2.</span> <span class="toc-text">索引的原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#索引的分类"><span class="toc-number">3.</span> <span class="toc-text">索引的分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#索引创建"><span class="toc-number">4.</span> <span class="toc-text">索引创建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"MySql索引原理及使用　| Xiao Ma Ge　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+    <script>
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2150761';
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+    <div id="uyan_frame"></div>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2015/12/03/AngularValidate/" title="下一篇: Hello World">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 Xiao Ma Ge
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
