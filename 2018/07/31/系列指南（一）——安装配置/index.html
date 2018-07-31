@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Xiao Ma Ge" />
+
+
+
+<meta name="description" content="Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。">
+<meta name="keywords" content="搜索">
+<meta property="og:type" content="article">
+<meta property="og:title" content="elasticsearch系列指南（一）——安装配置">
+<meta property="og:url" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/index.html">
+<meta property="og:site_name" content="Xiao Ma Ge">
+<meta property="og:description" content="Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/head.png">
+<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/1.png">
+<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/2.png">
+<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/3.png">
+<meta property="og:updated_time" content="2018-07-31T15:32:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="elasticsearch系列指南（一）——安装配置">
+<meta name="twitter:description" content="Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。">
+<meta name="twitter:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/head.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Xiao Ma Ge" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1511883499747&di=40ab57d794293bc93bcc0c59746d23ca&imgtype=0&src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>elasticsearch系列指南（一）——安装配置 | Xiao Ma Ge</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Xiao Ma Ge</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一个被代码迭代的舞者</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>个人签名</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySql/">MySql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/angular/">angular</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/搜索/">搜索</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">代码发动机</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一个被代码迭代的舞者</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="个人签名"/>
+</nav>
+      <div class="body-wrap"><article id="post-系列指南（一）——安装配置" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/07/31/系列指南（一）——安装配置/" class="article-date">
+      <time datetime="2018-07-31T13:40:15.000Z" itemprop="datePublished">2018-07-31</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      elasticsearch系列指南（一）——安装配置
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/ES/">ES</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/搜索/">搜索</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。<a id="more"></a><br>无论你是需要全文搜索、结构化数据的实时统计，还是两者的结合，这本指南都会帮助你了解其中最基本的概念，从最基本的操作开始学习 Elasticsearch。之后，我们还会逐渐开始探索更加复杂的搜索技术，你可以根据自身的学习的步伐。<br>Elasticsearch 并不是单纯的全文搜索这么简单。我们将向你介绍讲解结构化搜索、统计、查询过滤、地理定位、自动完成以及你是不是要查找的提示。我们还将探讨如何给数据建模能提升 Elasticsearch 的性能，以及在生产环境中如何配置、监视你的集群。</p>
+<h2 id="入门"><a href="#入门" class="headerlink" title="入门"></a>入门</h2><h3 id="初始"><a href="#初始" class="headerlink" title="初始"></a>初始</h3><p>Elasticsearch 是一个建立在全文搜索引擎 Apache Lucene(TM) 基础上的搜索引擎，可以说 Lucene 是当今最先进，最高效的全功能开源搜索引擎框架。</p>
+<p>但是 Lucene 只是一个框架，要充分利用它的功能，你需要使用 JAVA，并且在你的程序中集成 Lucene。更糟的是，你需要做很多的学习了解，才能明白它是如何运行的，Lucene 确实非常复杂。</p>
+<p>Elasticsearch 使用 Lucene 作为内部引擎，但是在你使用它做全文搜索时，只需要使用统一开发好的API即可，而并不需要了解其背后复杂的 Lucene 的运行原理。</p>
+<p>当然 Elasticsearch 并不仅仅是 Lucene 那么简单，它不仅包括了全文搜索功能，还可以进行以下工作:</p>
+<p>分布式实时文件存储，并将每一个字段都编入索引，使其可以被搜索。<br>实时分析的分布式搜索引擎。<br>可以扩展到上百台服务器，处理PB级别的结构化或非结构化数据。<br>这么多的功能被集成到一台服务器上，你可以轻松地通过客户端或者任何你喜欢的程序语言与 ES 的 RESTful API 进行交流。</p>
+<p>Elasticsearch 的上手是非常简单的。它附带了很多非常合理的默认值，这让初学者很好地避免一上手就要面对复杂的理论，它安装好了就可以使用了，用很小的学习成本就可以变得很有生产力。</p>
+<p>随着学习的深入，你还可以使用 Elasticsearch 更多高级的功能，整个引擎可以很灵活地进行配置。你可以根据自身需求来定制属于你自己的 Elasticsearch。</p>
+<h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>对es有几个核心概念，开始学习之前理解这些概念将极大的帮助你理解后面的学习</p>
+<h3 id="Near-Realtime（NRT-–接近实时"><a href="#Near-Realtime（NRT-–接近实时" class="headerlink" title="Near Realtime（NRT)–接近实时"></a>Near Realtime（NRT)–接近实时</h3><p>elasticsearch 是一个接近实时的搜索平台。通俗的讲就是，从你索引一个文档直到这个文档可被搜索会有一段时间的延迟（一般是1s）。个人理解就是你创建了个文档，会有将近1秒的延迟，别人才能搜索到这个文档</p>
+<h3 id="Cluster–集群"><a href="#Cluster–集群" class="headerlink" title="Cluster–集群"></a>Cluster–集群</h3><p>集群就是一个或者多个节点（服务器）的集合，承载着你的所有数据并在所有节点之间提供联合索引和搜索能力。一个集群被一个唯一的名字所标识，默认是elasticsearch。这个名字很重要，因为一个节点要加入集群，必须指定这个集群的名字。</p>
+<p>确保在不同的环境不要使用相同的集群名字，否则节点将加入错误的集群。</p>
+<p>注意，一个集群就有一个节点是合法的。除此之外，你也可以有多个相互独立的集群，每个用一个唯一的名字标识</p>
+<h3 id="Node–节点"><a href="#Node–节点" class="headerlink" title="Node–节点"></a>Node–节点</h3><p>节点就是集群中的一个单个服务器，它存储数据，参与集群的索引和搜索。就像一个集群，节点也用一个名字来标识，默认是一个随机的传奇人物的名字，在节点启动的时候被指定。</p>
+<p>一个节点可以配置加入一个集群通过集群的名字。默认，每个节点设置为加入名字为elasticsearch 的集群，这就意味着，如果你启动了多个节点在你的网络-假定他们能彼此发现对方-他们将自动的组织成一个名字为elasticsearch的集群。</p>
+<p>在一个集群中，你可以拥有你想要数量的节点。除此之外，如果没有其他elastisearch节点当前运行在你的网络上，启动一个节点将默认形成一个新的单个节点的名字为elastisearch的集群</p>
+<h3 id="index–索引"><a href="#index–索引" class="headerlink" title="index–索引"></a>index–索引</h3><p>一个索引就是文档的集合，这些文档有几分相似的特性。比如，你可以有一个索引存储客户数据，另一个索引存储产品分类，另一个索引存储订单信息。一个索引用一个名字来标识（必须是小写），这个名字被用来指定索引当针对其中的文档执行索引、搜索、更新、删除操作时。</p>
+<p>在一个集群中，你可以定义任意数量的索引，只要你想。</p>
+<p><strong>es 的index 相当于mysql 的database</strong> （个人理解）</p>
+<h3 id="Type–类型"><a href="#Type–类型" class="headerlink" title="Type–类型"></a>Type–类型</h3><p>在索引中，你可以定义一个或者多个类型。type是index的逻辑分类，怎么定义完全取决于你。大体上，具有相同字段的文档的集合被定义为一个type。打个比方，你运行了一个博客平台，且所有数据存储在了一个index里。在这个index里，你可以给用户数据定义一个type，给博客数据定义一个type，给评论数据定义一个type。</p>
+<p><strong>type相当于mysql的 table</strong></p>
+<h3 id="Document-–-文档"><a href="#Document-–-文档" class="headerlink" title="Document – 文档"></a>Document – 文档</h3><p>一个文档是可被索引的基本信息单元。例如，你可以有一个针对顾客的文档，还可以有个针对产品的文档，还可以有一个针对订单的文档。文档用json格式表示，此格式是普遍使用的一种数据交换格式。</p>
+<p>在一个index/type中，你可以存储你想要数量的文档。注意，尽管一个文档物理上存在一个index中，一个文档事实上必须被指定到一个index中的type上。</p>
+<p><strong>document相当于myslq 的 row</strong></p>
+<h3 id="shards-amp-replicas-–-分片与副本"><a href="#shards-amp-replicas-–-分片与副本" class="headerlink" title="shards &amp; replicas – 分片与副本"></a>shards &amp; replicas – 分片与副本</h3><p>一个index可能存储大量的数据，且超过了一个节点硬件的容量限制。比如，一个index存储了10亿个文档，这将占据1TB的硬盘，这不适合存储在一个节点的硬盘上，或者在如此大的数据量的情况下，从单一节点请求未免太慢。</p>
+<p>去解决这个问题，elastisearch细分index为多个碎片称之为<code>shards</code>。当创建索引时，你可以定义你想要的shards数量。每个shard都是功能齐全、独立的‘index’,且可分布在集群的任何节点上。</p>
+<h3 id="分片主要有以下两点："><a href="#分片主要有以下两点：" class="headerlink" title="分片主要有以下两点："></a>分片主要有以下两点：</h3><p>它允许你水平的拆分/扩展你的数据量<br>它允许你分发和并行的跨分片操作（可能在多个节点上），从而提高性能和吞吐量。<br>shard是如何分布的和文档是如何聚合回搜索请求点是完全由elasticsearch管理的，这对于你来说是透明的。</p>
+<p>在网络/云环境，故障在任何时候都可能不期而至，这是非常有用和高度推荐的去部署一个故障转移机制，以防shard/node不知何故掉线或者消失因为某种原因。为此，elasticsearch允许你去给shards 部署一个或者多个拷贝被称为副本shards，或者副本简而言之。</p>
+<h3 id="副本重要的两点原因："><a href="#副本重要的两点原因：" class="headerlink" title="副本重要的两点原因："></a>副本重要的两点原因：</h3><p>支持高可用当shard/node挂掉。基于这个原因，需要明确注意的是副本永远不要和他的shard分配到一个节点（node）上。<br>它可以扩展搜索量和吞吐量，因为搜索可以并行的在所有副本上执行</p>
+<p>总结，每个index可以拆分成多个shards。一个index也可以被复制0次或者多次。一旦被复制，每个index将拥有主分片（primary)和副本分片（replica）。index在创建的时候可以指定shards和replicas的数量。<strong>index创建后，副本的数量可以在任何时候动态的调整，但是主分片（primary）的数量是不能调整的</strong>。</p>
+<p>默认，每个index在es里被分配5个主分片和一个副本，这个的意思是如果你有至少两个节点在你的集群里，你的index将有5个主分片和另五个副本分片（1 个完整的副本），总共10个分片对每个index。</p>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>每个es的shard 都是一个lucene index。在每个Luene index里，documents数量都有个上线。根据LUCENE-5843，这个限制是2,147,483,519(=integer.MAX_VALUE-128)。你可以监控shard size 使用_cat/shards api （之后会学习到）</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="安装-JAVA"><a href="#安装-JAVA" class="headerlink" title="安装 JAVA"></a>安装 JAVA</h3><p><code>yum install java-1.7.0-openjdk -y</code></p>
+<h3 id="安装-Elasticsearch"><a href="#安装-Elasticsearch" class="headerlink" title="安装 Elasticsearch"></a>安装 Elasticsearch</h3><p>了解 Elasticsearch 最简单的方法就是去尽情的玩儿它（汗），准备好了我们就开始吧。</p>
+<p>安装 Elasticsearch 只有一个要求，就是要安装最新版本的JAVA。你可以到官方网站下载它：<a href="">www.java.com</a></p>
+<p>你可以在这里下载到最新版本的 Elasticsearch： <a href="">elasticsearch.org/download</a></p>
+<p>curl -L -O <a href="http://download.elasticsearch.org/PATH/TO/LATEST/$VERSION.zip" target="_blank" rel="noopener">http://download.elasticsearch.org/PATH/TO/LATEST/$VERSION.zip</a><br><code>unzip elasticsearch-VERSION.zipcdelasticsearch−VERSION</code><br>提示: 当你安装 Elasticsearch 时，你可以到 下载页面 选择Debian或者RP安装包。或者你也可以使用官方提供的 <code>Puppet module</code> 或者 <code>Chef cookbook.</code></p>
+<h3 id="运行-Elasticsearch"><a href="#运行-Elasticsearch" class="headerlink" title="运行 Elasticsearch"></a>运行 Elasticsearch</h3><p>Elasticsearch 已经蓄势待发，现在你便可以运行它了：<br><code>./bin/elasticsearch</code><br>如果你想让它在后台保持运行的话可以在命令后面再加一个 <code>-d</code></p>
+<p>开启后你就可以使用另一个终端窗口来进行测试了:<br>curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a><br>你应该看到如下提示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">  &quot;name&quot; : &quot;dxEOZL2&quot;,</span><br><span class="line">  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,</span><br><span class="line">  &quot;cluster_uuid&quot; : &quot;HGYuUvO_TYeS7I4W2x9eXQ&quot;,</span><br><span class="line">  &quot;version&quot; : &#123;</span><br><span class="line">    &quot;number&quot; : &quot;6.1.1&quot;,</span><br><span class="line">    &quot;build_hash&quot; : &quot;bd92e7f&quot;,</span><br><span class="line">    &quot;build_date&quot; : &quot;2017-12-17T20:23:25.338Z&quot;,</span><br><span class="line">    &quot;build_snapshot&quot; : false,</span><br><span class="line">    &quot;lucene_version&quot; : &quot;7.1.0&quot;,</span><br><span class="line">    &quot;minimum_wire_compatibility_version&quot; : &quot;5.6.0&quot;,</span><br><span class="line">    &quot;minimum_index_compatibility_version&quot; : &quot;5.0.0&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;tagline&quot; : &quot;You Know, for Search&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这就说明你的 Elasticsearch 集群 已经上线运行了，这时我们就可以进行各种实验了。</p>
+<h2 id="安装Elasticsearch-head插件"><a href="#安装Elasticsearch-head插件" class="headerlink" title="安装Elasticsearch-head插件"></a>安装Elasticsearch-head插件</h2><p>由上面curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a> 的结果可见是一些<code>json</code>格式的字符转并不直观，因此<code>head</code>插件为我们提供了一个很友好的可视化web界面，并且可以进行基本的数据检索，模拟等<br><code>GitHub</code>搜索<code>Elasticsearch-head</code> 选择下图这个打开下载解压到指定目录<br><img src="head.png" alt=""><br><code>node -v</code>查看node版本必须大于6.0 没有可先安装node<br>进入到解压的<code>head</code>目录执行<code>npm install</code>进行包安装<br>安装完成后执行<code>npm run start</code>启动当出现如下所示表明启动成功<br><figure class="highlight plain"><figcaption><span>mj$ npm run start</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">elasticsearch-head@0.0.0 start /Applications/javatools/Elasticsearch/elasticsearch-head-master</span><br><span class="line"> grunt server</span><br><span class="line"> (node:30630) ExperimentalWarning: The http2 module is an experimental API.</span><br><span class="line">Running &quot;connect:server&quot; (connect) task</span><br><span class="line">Waiting forever...</span><br><span class="line">Started connect web server on http://localhost:9100</span><br></pre></td></tr></table></figure></p>
+<p>复制<a href="http://localhost:9100">http://localhost:9100</a> 浏览器中打开便可看到如下图所示<br><img src="1.png" alt=""><br>目前是未连接状态，因为Elasticsearch没启动且和head是两个独立的进程之间存在跨域问题，因此要做如下配置<br>现将head停掉进入Elasticsearch目录执行<br><code>vim config/elasticsearch.yml</code><br>在文件的最下面加上<br><code>http.cors.enabled: true
+http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bin/elasticsearch -d</code>后台启动<code>elasticsearch</code><br>在进入<code>head</code>目录执行<code>npm run start</code>启动<code>head</code>插件<br>再次去浏览器出阿信刚才的页面出现如下页面<br>保存退出<br>执行./bin/elasticsearch -d后台启动elasticsearch<br>在进入head目录执行npm run start启动head插件<br>再次去浏览器刷新刚才的页面出现如下页面<br><img src="2.png" alt=""><br>此时我们就可以看到安装Elasticsearch的节点信息了，上面的集群健康状态由原来灰色变为绿色表示正常，如果是黄色说明集群健康有问题但可以使用，如果是红色则基本可能出现数据丢失等的问题基本不可用了。</p>
+<p><strong><em> 注意：这里连接的的是本地的安装Elasticsearch所以是localhost 如果连接其他地址可在head目录下修改_site/app.js文件里的地址</em></strong><br><code>this.base_uri = this.config.base_uri || this.prefs.get(&quot;app-base_uri&quot;) || &quot;http://localhost:9200&quot;;</code><br>把localhost修改成你es的服务器地址，如:<br><code>this.base_uri = this.config.base_uri || this.prefs.get(&quot;app-base_uri&quot;) || &quot;http://10.10.10.10:9200&quot;;</code><br><strong>至此head插件安装完成至此head插件安装完成</strong></p>
+<h2 id="分布式安装"><a href="#分布式安装" class="headerlink" title="分布式安装"></a>分布式安装</h2><p>进入<code>Elasticsearch</code> 目录执行<br><code>vim config/elasticsearch.yml</code><br>在最后添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cluster.name: myblog</span><br><span class="line">//指定指挥官节点为master</span><br><span class="line">node.name: master</span><br><span class="line">//确定节点为主节点</span><br><span class="line">node.master: true</span><br><span class="line">//绑定IP端口默认为9200</span><br><span class="line">network.host` 127.0.0.1</span><br></pre></td></tr></table></figure></p>
+<p>将Elasticsearch拷贝多份（这里都在一台机器暂定两份）安装方法不变分别命名为slave1和slave2<br>修改slave1配置 <code>vim config/elasticsearch.yml</code> 同样后面加上<br><figure class="highlight plain"><figcaption><span>myblog</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">node.name: slave1</span><br><span class="line">network.host: 127.0.0.1</span><br><span class="line">//默认为9200和master端口区分开</span><br><span class="line">http.port: 8200</span><br><span class="line">//指定集群指挥官地址</span><br><span class="line">discovery.zen.ping.unicast.hosts: [&quot;127.0.0.1&quot;]</span><br></pre></td></tr></table></figure></p>
+<p>同样方法配置slave2然后启动打开<a href="http://localhost:9100/">http://localhost:9100/</a> 如下图所示表示分布式安装完成 ⭐️表示指挥官⭕️表示随从<br><img src="3.png" alt=""></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
+        <p><span>发布时间:</span>2018-07-31, 21:40:15</p>
+        <p><span>最后更新:</span>2018-07-31, 23:32:22</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/07/31/系列指南（一）——安装配置/" title="elasticsearch系列指南（一）——安装配置">http://localhost:4000/2018/07/31/系列指南（一）——安装配置/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/07/31/系列指南（一）——安装配置/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/07/21/MySql索引原理及使用/">
+                    MySql索引原理及使用
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#入门"><span class="toc-number">1.</span> <span class="toc-text">入门</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#初始"><span class="toc-number">1.1.</span> <span class="toc-text">初始</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#基本概念"><span class="toc-number">2.</span> <span class="toc-text">基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Near-Realtime（NRT-–接近实时"><span class="toc-number">2.1.</span> <span class="toc-text">Near Realtime（NRT)–接近实时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cluster–集群"><span class="toc-number">2.2.</span> <span class="toc-text">Cluster–集群</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Node–节点"><span class="toc-number">2.3.</span> <span class="toc-text">Node–节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#index–索引"><span class="toc-number">2.4.</span> <span class="toc-text">index–索引</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Type–类型"><span class="toc-number">2.5.</span> <span class="toc-text">Type–类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Document-–-文档"><span class="toc-number">2.6.</span> <span class="toc-text">Document – 文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#shards-amp-replicas-–-分片与副本"><span class="toc-number">2.7.</span> <span class="toc-text">shards & replicas – 分片与副本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分片主要有以下两点："><span class="toc-number">2.8.</span> <span class="toc-text">分片主要有以下两点：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#副本重要的两点原因："><span class="toc-number">2.9.</span> <span class="toc-text">副本重要的两点原因：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注意"><span class="toc-number">2.10.</span> <span class="toc-text">注意</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装"><span class="toc-number">3.</span> <span class="toc-text">安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装-JAVA"><span class="toc-number">3.1.</span> <span class="toc-text">安装 JAVA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安装-Elasticsearch"><span class="toc-number">3.2.</span> <span class="toc-text">安装 Elasticsearch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#运行-Elasticsearch"><span class="toc-number">3.3.</span> <span class="toc-text">运行 Elasticsearch</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装Elasticsearch-head插件"><span class="toc-number">4.</span> <span class="toc-text">安装Elasticsearch-head插件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分布式安装"><span class="toc-number">5.</span> <span class="toc-text">分布式安装</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"elasticsearch系列指南（一）——安装配置　| Xiao Ma Ge　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+    <script>
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2150761';
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+    <div id="uyan_frame"></div>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/07/21/MySql索引原理及使用/" title="下一篇: MySql索引原理及使用">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 Xiao Ma Ge
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

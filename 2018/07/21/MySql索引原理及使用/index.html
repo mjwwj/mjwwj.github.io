@@ -23,12 +23,12 @@
 <meta property="og:site_name" content="Xiao Ma Ge">
 <meta property="og:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png">
-<meta property="og:updated_time" content="2018-07-21T06:42:07.000Z">
+<meta property="og:image" content="http://localhost:4000/2018/07/21/MySql索引原理及使用/b+tree.png">
+<meta property="og:updated_time" content="2018-07-31T15:24:47.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySql索引原理及使用">
 <meta name="twitter:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
-<meta name="twitter:image" content="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png">
+<meta name="twitter:image" content="http://localhost:4000/2018/07/21/MySql索引原理及使用/b+tree.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -198,7 +198,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySql/">MySql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/angular/">angular</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySql/">MySql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/angular/">angular</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/搜索/">搜索</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
                     </div>
                 </section>
                 
@@ -338,7 +338,7 @@
 <p> <strong>二 磁盘IO与预读</strong></p>
 <p>考虑到磁盘IO是非常高昂的操作，计算机操作系统做了一些优化，当一次IO时，不光把当前磁盘地址的数据，而是把相邻的数据也都读取到内存缓冲区内，因为局部预读性原理告诉我们，当计算机访问一个地址的数据的时候，与其相邻的数据也会很快被访问到。每一次IO读取的数据我们称之为一页(page)。具体一页有多大数据跟操作系统有关，一般为4k或8k，也就是我们读取一页内的数据时候，实际上才发生了一次IO，这个理论对于索引的数据结构设计非常有帮助。</p>
 <p><strong>三、索引的数据结构</strong><br>任何一种数据结构都不是凭空产生的，一定会有它的背景和使用场景，我们现在总结一下，我们需要这种数据结构能够做些什么，其实很简单，那就是：每次查找数据时把磁盘IO次数控制在一个很小的数量级，最好是常数数量级。那么我们就想到如果一个高度可控的多路搜索树是否能满足需求呢？就这样，b+树应运而生。</p>
-<p><img src="https://images2017.cnblogs.com/blog/1184802/201709/1184802-20170912211249219-1576835998.png" alt=""></p>
+<p><img src="b+tree.png" alt=""></p>
 <p>如上图，是一颗b+树，关于b+树的定义可以参见B+树，这里只说一些重点，浅蓝色的块我们称之为一个磁盘块，可以看到每个磁盘块包含几个数据项（深蓝色所示）和指针（黄色所示），如磁盘块1包含数据项17和35，包含指针P1、P2、P3，P1表示小于17的磁盘块，P2表示在17和35之间的磁盘块，P3表示大于35的磁盘块。真实的数据存在于叶子节点即3、5、9、10、13、15、28、29、36、60、75、79、90、99。非叶子节点只不存储真实的数据，只存储指引搜索方向的数据项，如17、35并不真实存在于数据表中。</p>
 <p><strong>b+树的查找过程</strong></p>
 <p>如图所示，如果要查找数据项29，那么首先会把磁盘块1由磁盘加载到内存，此时发生一次IO，在内存中用二分查找确定29在17和35之间，锁定磁盘块1的P2指针，内存时间因为非常短（相比磁盘的IO）可以忽略不计，通过磁盘块1的P2指针的磁盘地址把磁盘块3由磁盘加载到内存，发生第二次IO，29在26和30之间，锁定磁盘块3的P2指针，通过指针加载磁盘块8到内存，发生第三次IO，同时内存中做二分查找找到29，结束查询，总计三次IO。真实的情况是，3层的b+树可以表示上百万的数据，如果上百万的数据查找只需要三次IO，性能提高将是巨大的，如果没有索引，每个数据项都要发生一次IO，那么总共需要百万次的IO，显然成本非常非常高。</p>
@@ -402,7 +402,7 @@
         <p><span>本文标题:</span><a href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
         <p><span>发布时间:</span>2018-07-21, 14:04:51</p>
-        <p><span>最后更新:</span>2018-07-21, 14:42:07</p>
+        <p><span>最后更新:</span>2018-07-31, 23:24:47</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/07/21/MySql索引原理及使用/" title="MySql索引原理及使用">http://localhost:4000/2018/07/21/MySql索引原理及使用/</a>
             <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/07/21/MySql索引原理及使用/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -416,6 +416,12 @@
 
 
     <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/07/31/系列指南（一）——安装配置/">
+                    elasticsearch系列指南（一）——安装配置
+                </a>
+            </div>
         
         
             <div id="article-nav-older" class="article-nav-title">
@@ -502,7 +508,9 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+            <a href="/2018/07/31/系列指南（一）——安装配置/" title="上一篇: elasticsearch系列指南（一）——安装配置">
+                <i class="fa fa-angle-left"></i>
+            </a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
@@ -514,7 +522,7 @@
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
 
 
 
