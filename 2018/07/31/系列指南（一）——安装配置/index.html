@@ -23,15 +23,15 @@
 <meta property="og:site_name" content="Xiao Ma Ge">
 <meta property="og:description" content="Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/head.png">
-<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/1.png">
-<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/2.png">
-<meta property="og:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/3.png">
-<meta property="og:updated_time" content="2018-07-31T15:32:22.000Z">
+<meta property="og:image" content="http://localhost:4000/images/es-head.png">
+<meta property="og:image" content="http://localhost:4000/images/es1.png">
+<meta property="og:image" content="http://localhost:4000/images/es2.png">
+<meta property="og:image" content="http://localhost:4000/images/es3.png">
+<meta property="og:updated_time" content="2018-08-01T08:59:53.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="elasticsearch系列指南（一）——安装配置">
 <meta name="twitter:description" content="Elasticsearch 是一个分布式可扩展的实时搜索和分析引擎。它能帮助你搜索、分析和浏览数据，而往往大家并没有在某个项目一开始就预料到需要这些功能。Elasticsearch 之所以出现就是为了重新赋予硬盘中看似无用的原始数据新的活力。">
-<meta name="twitter:image" content="http://localhost:4000/2018/07/31/系列指南（一）——安装配置/head.png">
+<meta name="twitter:image" content="http://localhost:4000/images/es-head.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -63,7 +63,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>elasticsearch系列指南（一）——安装配置 | Xiao Ma Ge</title>
+<title>Category: ES | Xiao Ma Ge</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -76,7 +76,7 @@
         isPost: true,
         isArchive: false,
         isTag: false,
-        isCategory: false,
+        isCategory: true,
         fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
         scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
         search: true
@@ -284,7 +284,7 @@
   
     <div class="article-meta">
       <a href="/2018/07/31/系列指南（一）——安装配置/" class="article-date">
-      <time datetime="2018-07-31T13:40:15.000Z" itemprop="datePublished">2018-07-31</time>
+      <time datetime="2018-07-31T13:40:00.000Z" itemprop="datePublished">2018-07-31</time>
 </a>
 
 
@@ -362,15 +362,15 @@
 <p>你可以在这里下载到最新版本的 Elasticsearch： <a href="">elasticsearch.org/download</a></p>
 <p>curl -L -O <a href="http://download.elasticsearch.org/PATH/TO/LATEST/$VERSION.zip" target="_blank" rel="noopener">http://download.elasticsearch.org/PATH/TO/LATEST/$VERSION.zip</a><br><code>unzip elasticsearch-VERSION.zipcdelasticsearch−VERSION</code><br>提示: 当你安装 Elasticsearch 时，你可以到 下载页面 选择Debian或者RP安装包。或者你也可以使用官方提供的 <code>Puppet module</code> 或者 <code>Chef cookbook.</code></p>
 <h3 id="运行-Elasticsearch"><a href="#运行-Elasticsearch" class="headerlink" title="运行 Elasticsearch"></a>运行 Elasticsearch</h3><p>Elasticsearch 已经蓄势待发，现在你便可以运行它了：<br><code>./bin/elasticsearch</code><br>如果你想让它在后台保持运行的话可以在命令后面再加一个 <code>-d</code></p>
-<p>开启后你就可以使用另一个终端窗口来进行测试了:<br>curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a><br>你应该看到如下提示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">  &quot;name&quot; : &quot;dxEOZL2&quot;,</span><br><span class="line">  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,</span><br><span class="line">  &quot;cluster_uuid&quot; : &quot;HGYuUvO_TYeS7I4W2x9eXQ&quot;,</span><br><span class="line">  &quot;version&quot; : &#123;</span><br><span class="line">    &quot;number&quot; : &quot;6.1.1&quot;,</span><br><span class="line">    &quot;build_hash&quot; : &quot;bd92e7f&quot;,</span><br><span class="line">    &quot;build_date&quot; : &quot;2017-12-17T20:23:25.338Z&quot;,</span><br><span class="line">    &quot;build_snapshot&quot; : false,</span><br><span class="line">    &quot;lucene_version&quot; : &quot;7.1.0&quot;,</span><br><span class="line">    &quot;minimum_wire_compatibility_version&quot; : &quot;5.6.0&quot;,</span><br><span class="line">    &quot;minimum_index_compatibility_version&quot; : &quot;5.0.0&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;tagline&quot; : &quot;You Know, for Search&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>开启后你就可以使用另一个终端窗口来进行测试了:<br>curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a><br>你应该看到如下提示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">"name"</span> : <span class="string">"dxEOZL2"</span>,</span><br><span class="line">  <span class="string">"cluster_name"</span> : <span class="string">"elasticsearch"</span>,</span><br><span class="line">  <span class="string">"cluster_uuid"</span> : <span class="string">"HGYuUvO_TYeS7I4W2x9eXQ"</span>,</span><br><span class="line">  <span class="string">"version"</span> : &#123;</span><br><span class="line">    <span class="string">"number"</span> : <span class="string">"6.1.1"</span>,</span><br><span class="line">    <span class="string">"build_hash"</span> : <span class="string">"bd92e7f"</span>,</span><br><span class="line">    <span class="string">"build_date"</span> : <span class="string">"2017-12-17T20:23:25.338Z"</span>,</span><br><span class="line">    <span class="string">"build_snapshot"</span> : <span class="keyword">false</span>,</span><br><span class="line">    <span class="string">"lucene_version"</span> : <span class="string">"7.1.0"</span>,</span><br><span class="line">    <span class="string">"minimum_wire_compatibility_version"</span> : <span class="string">"5.6.0"</span>,</span><br><span class="line">    <span class="string">"minimum_index_compatibility_version"</span> : <span class="string">"5.0.0"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">"tagline"</span> : <span class="string">"You Know, for Search"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>这就说明你的 Elasticsearch 集群 已经上线运行了，这时我们就可以进行各种实验了。</p>
-<h2 id="安装Elasticsearch-head插件"><a href="#安装Elasticsearch-head插件" class="headerlink" title="安装Elasticsearch-head插件"></a>安装Elasticsearch-head插件</h2><p>由上面curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a> 的结果可见是一些<code>json</code>格式的字符转并不直观，因此<code>head</code>插件为我们提供了一个很友好的可视化web界面，并且可以进行基本的数据检索，模拟等<br><code>GitHub</code>搜索<code>Elasticsearch-head</code> 选择下图这个打开下载解压到指定目录<br><img src="head.png" alt=""><br><code>node -v</code>查看node版本必须大于6.0 没有可先安装node<br>进入到解压的<code>head</code>目录执行<code>npm install</code>进行包安装<br>安装完成后执行<code>npm run start</code>启动当出现如下所示表明启动成功<br><figure class="highlight plain"><figcaption><span>mj$ npm run start</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">elasticsearch-head@0.0.0 start /Applications/javatools/Elasticsearch/elasticsearch-head-master</span><br><span class="line"> grunt server</span><br><span class="line"> (node:30630) ExperimentalWarning: The http2 module is an experimental API.</span><br><span class="line">Running &quot;connect:server&quot; (connect) task</span><br><span class="line">Waiting forever...</span><br><span class="line">Started connect web server on http://localhost:9100</span><br></pre></td></tr></table></figure></p>
-<p>复制<a href="http://localhost:9100">http://localhost:9100</a> 浏览器中打开便可看到如下图所示<br><img src="1.png" alt=""><br>目前是未连接状态，因为Elasticsearch没启动且和head是两个独立的进程之间存在跨域问题，因此要做如下配置<br>现将head停掉进入Elasticsearch目录执行<br><code>vim config/elasticsearch.yml</code><br>在文件的最下面加上<br><code>http.cors.enabled: true
-http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bin/elasticsearch -d</code>后台启动<code>elasticsearch</code><br>在进入<code>head</code>目录执行<code>npm run start</code>启动<code>head</code>插件<br>再次去浏览器出阿信刚才的页面出现如下页面<br>保存退出<br>执行./bin/elasticsearch -d后台启动elasticsearch<br>在进入head目录执行npm run start启动head插件<br>再次去浏览器刷新刚才的页面出现如下页面<br><img src="2.png" alt=""><br>此时我们就可以看到安装Elasticsearch的节点信息了，上面的集群健康状态由原来灰色变为绿色表示正常，如果是黄色说明集群健康有问题但可以使用，如果是红色则基本可能出现数据丢失等的问题基本不可用了。</p>
+<h2 id="安装Elasticsearch-head插件"><a href="#安装Elasticsearch-head插件" class="headerlink" title="安装Elasticsearch-head插件"></a>安装Elasticsearch-head插件</h2><p>由上面curl ‘<a href="http://localhost:9200/?pretty’">http://localhost:9200/?pretty’</a> 的结果可见是一些<code>json</code>格式的字符转并不直观，因此<code>head</code>插件为我们提供了一个很友好的可视化web界面，并且可以进行基本的数据检索，模拟等<br><code>GitHub</code>搜索<code>Elasticsearch-head</code> 选择下图这个打开下载解压到指定目录<br><img src="/images/es-head.png" alt=""><br><code>node -v</code>查看node版本必须大于6.0 没有可先安装node<br>进入到解压的<code>head</code>目录执行<code>npm install</code>进行包安装<br>安装完成后执行<code>npm run start</code>启动当出现如下所示表明启动成功<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mjdeMacBook-Pro:elasticsearch-head-master mj$ npm run start</span><br><span class="line">elasticsearch-head@<span class="number">0.0</span>.0 start /Applications/javatools/Elasticsearch/elasticsearch-head-master</span><br><span class="line"> grunt server</span><br><span class="line"> (node:<span class="number">30630</span>) ExperimentalWarning: The http2 <span class="keyword">module</span> is an experimental API.</span><br><span class="line">Running <span class="string">"connect:server"</span> (connect) task</span><br><span class="line">Waiting forever...</span><br><span class="line">Started connect web server on http:<span class="comment">//localhost:9100</span></span><br></pre></td></tr></table></figure></p>
+<p>复制<a href="http://localhost:9100">http://localhost:9100</a> 浏览器中打开便可看到如下图所示<br><img src="/images/es1.png" alt=""><br>目前是未连接状态，因为Elasticsearch没启动且和head是两个独立的进程之间存在跨域问题，因此要做如下配置<br>现将head停掉进入Elasticsearch目录执行<br><code>vim config/elasticsearch.yml</code><br>在文件的最下面加上<br><code>http.cors.enabled: true
+http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bin/elasticsearch -d</code>后台启动<code>elasticsearch</code><br>在进入<code>head</code>目录执行<code>npm run start</code>启动<code>head</code>插件<br>再次去浏览器出阿信刚才的页面出现如下页面<br>保存退出<br>执行./bin/elasticsearch -d后台启动elasticsearch<br>在进入head目录执行npm run start启动head插件<br>再次去浏览器刷新刚才的页面出现如下页面<br><img src="/images/es2.png" alt=""><br>此时我们就可以看到安装Elasticsearch的节点信息了，上面的集群健康状态由原来灰色变为绿色表示正常，如果是黄色说明集群健康有问题但可以使用，如果是红色则基本可能出现数据丢失等的问题基本不可用了。</p>
 <p><strong><em> 注意：这里连接的的是本地的安装Elasticsearch所以是localhost 如果连接其他地址可在head目录下修改_site/app.js文件里的地址</em></strong><br><code>this.base_uri = this.config.base_uri || this.prefs.get(&quot;app-base_uri&quot;) || &quot;http://localhost:9200&quot;;</code><br>把localhost修改成你es的服务器地址，如:<br><code>this.base_uri = this.config.base_uri || this.prefs.get(&quot;app-base_uri&quot;) || &quot;http://10.10.10.10:9200&quot;;</code><br><strong>至此head插件安装完成至此head插件安装完成</strong></p>
-<h2 id="分布式安装"><a href="#分布式安装" class="headerlink" title="分布式安装"></a>分布式安装</h2><p>进入<code>Elasticsearch</code> 目录执行<br><code>vim config/elasticsearch.yml</code><br>在最后添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cluster.name: myblog</span><br><span class="line">//指定指挥官节点为master</span><br><span class="line">node.name: master</span><br><span class="line">//确定节点为主节点</span><br><span class="line">node.master: true</span><br><span class="line">//绑定IP端口默认为9200</span><br><span class="line">network.host` 127.0.0.1</span><br></pre></td></tr></table></figure></p>
-<p>将Elasticsearch拷贝多份（这里都在一台机器暂定两份）安装方法不变分别命名为slave1和slave2<br>修改slave1配置 <code>vim config/elasticsearch.yml</code> 同样后面加上<br><figure class="highlight plain"><figcaption><span>myblog</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">node.name: slave1</span><br><span class="line">network.host: 127.0.0.1</span><br><span class="line">//默认为9200和master端口区分开</span><br><span class="line">http.port: 8200</span><br><span class="line">//指定集群指挥官地址</span><br><span class="line">discovery.zen.ping.unicast.hosts: [&quot;127.0.0.1&quot;]</span><br></pre></td></tr></table></figure></p>
-<p>同样方法配置slave2然后启动打开<a href="http://localhost:9100/">http://localhost:9100/</a> 如下图所示表示分布式安装完成 ⭐️表示指挥官⭕️表示随从<br><img src="3.png" alt=""></p>
+<h2 id="分布式安装"><a href="#分布式安装" class="headerlink" title="分布式安装"></a>分布式安装</h2><p>进入<code>Elasticsearch</code> 目录执行<br><code>vim config/elasticsearch.yml</code><br>在最后添加<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//指定集群名称</span></span><br><span class="line">cluster.name: myblog</span><br><span class="line"><span class="comment">//指定指挥官节点为master</span></span><br><span class="line">node.name: master</span><br><span class="line"><span class="comment">//确定节点为主节点</span></span><br><span class="line">node.master: <span class="keyword">true</span></span><br><span class="line"><span class="comment">//绑定IP端口默认为9200</span></span><br><span class="line">network.host` <span class="number">127.0</span>.0.1</span><br></pre></td></tr></table></figure></p>
+<p>将Elasticsearch拷贝多份（这里都在一台机器暂定两份）安装方法不变分别命名为slave1和slave2<br>修改slave1配置 <code>vim config/elasticsearch.yml</code> 同样后面加上<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cluster.name: myblog</span><br><span class="line">node.name: slave1</span><br><span class="line">network.host: <span class="number">127.0</span>.0.1</span><br><span class="line"><span class="comment">//默认为9200和master端口区分开</span></span><br><span class="line">http.port: <span class="number">8200</span></span><br><span class="line"><span class="comment">//指定集群指挥官地址</span></span><br><span class="line">discovery.zen.ping.unicast.hosts: [<span class="string">"127.0.0.1"</span>]</span><br></pre></td></tr></table></figure></p>
+<p>同样方法配置slave2然后启动打开<a href="http://localhost:9100/">http://localhost:9100/</a> 如下图所示表示分布式安装完成 ⭐️表示指挥官⭕️表示随从<br><img src="/images/es3.png" alt=""></p>
 
       
     </div>
@@ -381,8 +381,8 @@ http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bi
     <div class="copyright">
         <p><span>本文标题:</span><a href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
-        <p><span>发布时间:</span>2018-07-31, 21:40:15</p>
-        <p><span>最后更新:</span>2018-07-31, 23:32:22</p>
+        <p><span>发布时间:</span>2018-07-31, 21:40:00</p>
+        <p><span>最后更新:</span>2018-08-01, 16:59:53</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/07/31/系列指南（一）——安装配置/" title="elasticsearch系列指南（一）——安装配置">http://localhost:4000/2018/07/31/系列指南（一）——安装配置/</a>
             <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/07/31/系列指南（一）——安装配置/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -396,6 +396,12 @@ http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bi
 
 
     <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/">
+                    Elasticsearch 系列指南（二）——基本用法
+                </a>
+            </div>
         
         
             <div id="article-nav-older" class="article-nav-title">
@@ -482,7 +488,9 @@ http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bi
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+            <a href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/" title="上一篇: Elasticsearch 系列指南（二）——基本用法">
+                <i class="fa fa-angle-left"></i>
+            </a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
@@ -494,7 +502,7 @@ http.cors.allow-origin: &quot;*&quot;</code><br>保存退出<br>执行<code>./bi
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/">Elasticsearch 系列指南（三）——集成ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/">Elasticsearch 系列指南（二）——基本用法</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
 
 
 

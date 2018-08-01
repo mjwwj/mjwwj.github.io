@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Xiao Ma Ge" />
+
+
+
+<meta name="description" content="Elasticsearch中，内置了很多分词器（analyzers），例如standard （标准分词器）、english （英文分词）和chinese （中文分词）。其中standard 就是无脑的一个一个词（汉字）切分，所以适用范围广，但是精准度低；english 对英文更加智能，可以识别单数负数，大小写，过滤st">
+<meta name="keywords" content="小马哥的博客, java, 日语, 动漫, 技术, unity3d, nginx, https, angular, 游戏, 服务器, tomcat, IDEA, javaweb, spring, hibernate, spring boot, 开源中国, github, linux, 主程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elasticsearch 系列指南（三）——集成ik分词器">
+<meta property="og:url" content="http://localhost:4000/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/index.html">
+<meta property="og:site_name" content="Xiao Ma Ge">
+<meta property="og:description" content="Elasticsearch中，内置了很多分词器（analyzers），例如standard （标准分词器）、english （英文分词）和chinese （中文分词）。其中standard 就是无脑的一个一个词（汉字）切分，所以适用范围广，但是精准度低；english 对英文更加智能，可以识别单数负数，大小写，过滤stopwords（例如“the”这个词）等；chinese 效果很差。这次主要玩这">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-08-01T09:01:28.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Elasticsearch 系列指南（三）——集成ik分词器">
+<meta name="twitter:description" content="Elasticsearch中，内置了很多分词器（analyzers），例如standard （标准分词器）、english （英文分词）和chinese （中文分词）。其中standard 就是无脑的一个一个词（汉字）切分，所以适用范围广，但是精准度低；english 对英文更加智能，可以识别单数负数，大小写，过滤stopwords（例如“the”这个词）等；chinese 效果很差。这次主要玩这">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Xiao Ma Ge" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1511883499747&di=40ab57d794293bc93bcc0c59746d23ca&imgtype=0&src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Elasticsearch 系列指南（三）——集成ik分词器 | Xiao Ma Ge</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Xiao Ma Ge</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一个被代码迭代的舞者</p>
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>个人签名</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about.html">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySql/">MySql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/angular/">angular</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/搜索/">搜索</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">代码发动机</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://timgsa.baidu.com/timg?image&amp;quality=80&amp;size=b9999_10000&amp;sec=1511883499747&amp;di=40ab57d794293bc93bcc0c59746d23ca&amp;imgtype=0&amp;src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F28%2F09%2F84f58PICFyW_1024.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Xiao Ma Ge</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一个被代码迭代的舞者</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about.html">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/mjwwj" title="GitHub"></a>
+                            
+                                <a class="fa 知乎" target="_blank" href="https://www.zhihu.com/#signin" title="知乎"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=83387856&site=qq&menu=yes" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="个人签名"/>
+</nav>
+      <div class="body-wrap"><article id="post-lasticsearch-系列指南（三）——集成ik分词器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/" class="article-date">
+      <time datetime="2018-08-01T05:34:10.000Z" itemprop="datePublished">2018-08-01</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Elasticsearch 系列指南（三）——集成ik分词器
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>Elasticsearch中，内置了很多分词器（analyzers），例如<code>standard</code> （标准分词器）、<code>english</code> （英文分词）和<code>chinese</code> （中文分词）。其中<code>standard</code> 就是无脑的一个一个词（汉字）切分，所以适用范围广，但是精准度低；<code>english</code> 对英文更加智能，可以识别单数负数，大小写，过滤<code>stopwords</code>（例如“the”这个词）等；<code>chinese</code> 效果很差。这次主要玩这几个内容：安装中文分词<code>ik</code>，对比不同分词器的效果，得出一个较佳的配置。<a id="more"></a></p>
+<p>IK分析插件将Lucene IK分析器（<a href="http://code.google.com/p/ik-analyzer/）" target="_blank" rel="noopener">http://code.google.com/p/ik-analyzer/）</a> 集成到elasticsearch中，支持自定义字典。</p>
+<p>分析：<code>ik_smart</code>，<code>ik_max_word</code>，分词：<code>ik_smart</code>，<code>ik_max_word</code></p>
+<h3 id="分词器对比："><a href="#分词器对比：" class="headerlink" title="分词器对比："></a>分词器对比：</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST http://192.168.159.159:9200/index1/_analyze?analyzer=ik_max_word</span><br><span class="line">联想召回笔记本电源线</span><br></pre></td></tr></table></figure>
+<p><strong>ik测试结果：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">"tokens"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"联想"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">0</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">2</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"CN_WORD"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">1</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"召回"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">2</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">4</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"CN_WORD"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">2</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"笔记本"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">4</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">7</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"CN_WORD"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">3</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"电源线"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">7</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">10</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"CN_WORD"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">4</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>自带chinese和standard分词器的结果：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">"tokens"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"联"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">0</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">1</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">1</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"想"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">1</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">2</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">2</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"召"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">2</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">3</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">3</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"回"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">3</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">4</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">4</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"笔"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">4</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">5</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">5</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"记"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">5</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">6</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">6</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"本"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">6</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">7</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">7</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"电"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">7</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">8</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">8</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"源"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">8</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">9</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">9</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">"token"</span>: <span class="string">"线"</span>,</span><br><span class="line">            <span class="string">"start_offset"</span>: <span class="number">9</span>,</span><br><span class="line">            <span class="string">"end_offset"</span>: <span class="number">10</span>,</span><br><span class="line">            <span class="string">"type"</span>: <span class="string">"&lt;IDEOGRAPHIC&gt;"</span>,</span><br><span class="line">            <span class="string">"position"</span>: <span class="number">10</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>由此可见自带分词器将其分成一个一个的字，这在我们使用过程中并不是很友好，因此ik分词器相反是更好的选择，那么接下来我们就看看ik分词器的安装使用</p>
+<h3 id="ik安装："><a href="#ik安装：" class="headerlink" title="ik安装："></a>ik安装：</h3><ol>
+<li><p>下载或编译</p>
+<ul>
+<li><p>可选1 - 从这里下载预生成包：https：//github.com/medcl/elasticsearch-analysis-ik/releases<br>解压插件到文件夹 <code>your-es-root/plugins/</code></p>
+</li>
+<li><p>可选2 - 使用elasticsearch-plugin来安装（version&gt; v5.5.1）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./bin/elasticsearch-plugin install https:<span class="comment">//github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.0.0/elasticsearch-analysis-ik-6.0.0.zip</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
+<p> 重新开始elasticsearch</p>
+<p> <code>注意</code>：要选择和elasticsearch相同的版本</p>
+<h3 id="使用准备：创建数据，录入测试数据"><a href="#使用准备：创建数据，录入测试数据" class="headerlink" title="使用准备：创建数据，录入测试数据"></a>使用准备：创建数据，录入测试数据</h3> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"> PUT http:<span class="comment">//localhost:9200/index1</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">"settings"</span>: &#123;</span><br><span class="line">     <span class="string">"refresh_interval"</span>: <span class="string">"5s"</span>,</span><br><span class="line">     <span class="string">"number_of_shards"</span> :   <span class="number">3</span>, </span><br><span class="line">     <span class="string">"number_of_replicas"</span> : <span class="number">1</span> </span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">"mappings"</span>: &#123;</span><br><span class="line">    <span class="string">"resource"</span>: &#123;</span><br><span class="line">      <span class="string">"dynamic"</span>: <span class="keyword">false</span>, </span><br><span class="line">      <span class="string">"properties"</span>: &#123;</span><br><span class="line">        <span class="string">"title"</span>: &#123;</span><br><span class="line">          <span class="string">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">          <span class="string">"analyzer"</span>: <span class="string">"ik_max_word"</span>,</span><br><span class="line">          <span class="string">"fields"</span>: &#123;</span><br><span class="line">            <span class="string">"cn"</span>: &#123;</span><br><span class="line">              <span class="string">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">              <span class="string">"analyzer"</span>: <span class="string">"ik_max_word"</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">"en"</span>: &#123;</span><br><span class="line">              <span class="string">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">              <span class="string">"analyzer"</span>: <span class="string">"english"</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">http:<span class="comment">//localhost:9200/_bulk</span></span><br><span class="line">&#123; <span class="string">"create"</span>: &#123; <span class="string">"_index"</span>: <span class="string">"index1"</span>, <span class="string">"_type"</span>: <span class="string">"resource"</span>, <span class="string">"_id"</span>: <span class="number">1</span> &#125; &#125;</span><br><span class="line">&#123; <span class="string">"title"</span>: <span class="string">"周星驰最新电影"</span> &#125;</span><br><span class="line">&#123; <span class="string">"create"</span>: &#123; <span class="string">"_index"</span>: <span class="string">"index1"</span>, <span class="string">"_type"</span>: <span class="string">"resource"</span>, <span class="string">"_id"</span>: <span class="number">2</span> &#125; &#125;</span><br><span class="line">&#123; <span class="string">"title"</span>: <span class="string">"周星驰最好看的新电影"</span> &#125;</span><br><span class="line">&#123; <span class="string">"create"</span>: &#123; <span class="string">"_index"</span>: <span class="string">"index1"</span>, <span class="string">"_type"</span>: <span class="string">"resource"</span>, <span class="string">"_id"</span>: <span class="number">3</span> &#125; &#125;</span><br><span class="line">&#123; <span class="string">"title"</span>: <span class="string">"周星驰最新电影，最好，新电影"</span> &#125;</span><br><span class="line">&#123; <span class="string">"create"</span>: &#123; <span class="string">"_index"</span>: <span class="string">"index1"</span>, <span class="string">"_type"</span>: <span class="string">"resource"</span>, <span class="string">"_id"</span>: <span class="number">4</span> &#125; &#125;</span><br><span class="line">&#123; <span class="string">"title"</span>: <span class="string">"最最最最好的新新新新电影"</span> &#125;</span><br><span class="line">&#123; <span class="string">"create"</span>: &#123; <span class="string">"_index"</span>: <span class="string">"index1"</span>, <span class="string">"_type"</span>: <span class="string">"resource"</span>, <span class="string">"_id"</span>: <span class="number">5</span> &#125; &#125;</span><br><span class="line">&#123; <span class="string">"title"</span>: <span class="string">"I'm not happy about the foxes"</span> &#125;</span><br></pre></td></tr></table></figure>
+<p><strong>注意bulk api要“回车”换行，不然会报错。</strong></p>
+<h3 id="搜索关键词“最新”和“fox”"><a href="#搜索关键词“最新”和“fox”" class="headerlink" title="搜索关键词“最新”和“fox”"></a>搜索关键词“最新”和“fox”</h3><p><strong>测试方法：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">POST http:<span class="comment">//localhost:9200/index1/resource/_search</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">"query"</span>: &#123;</span><br><span class="line">    <span class="string">"multi_match"</span>: &#123;</span><br><span class="line">      <span class="string">"type"</span>:     <span class="string">"most_fields"</span>, </span><br><span class="line">      <span class="string">"query"</span>:    <span class="string">"最新"</span>,</span><br><span class="line">      <span class="string">"fields"</span>: [ <span class="string">"title"</span>, <span class="string">"title.cn"</span>, <span class="string">"title.en"</span> ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们修改<code>query</code> 和<code>fields</code> 字段来对比。</p>
+<p>1）搜索“最新”，字段限制在<code>title.cn</code> 的结果（只展示hit部分）：<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"> <span class="string">"hits"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"1"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">1.0537746</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"3"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.9057159</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最新电影，最好，新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"4"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.5319481</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"最最最最好的新新新新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"2"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.33246756</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最好看的新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure></p>
+<p>再次搜索“最新”，字段限制在<code>title</code> ，<code>title.en</code> 的结果（只展示hit部分）：<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"> <span class="string">"hits"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"4"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">1</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"最最最最好的新新新新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"1"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.75</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"3"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.70710677</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最新电影，最好，新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"2"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.625</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"周星驰最好看的新电影"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure></p>
+<p>结论：如果没有使用ik中文分词，会把“最新”当成两个独立的“字”，搜索准确性低。</p>
+<p>2）搜索“fox”，字段限制在<code>title</code> 和<code>title.cn</code> ，结果为空，对于它们两个分词器，<code>fox</code>和<code>foxes</code>不同。再次搜索“fox”，字段限制在<code>title.en</code> ，结果如下：</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="string">"hits"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"_index"</span>: <span class="string">"index1"</span>,</span><br><span class="line">        <span class="string">"_type"</span>: <span class="string">"resource"</span>,</span><br><span class="line">        <span class="string">"_id"</span>: <span class="string">"5"</span>,</span><br><span class="line">        <span class="string">"_score"</span>: <span class="number">0.9581454</span>,</span><br><span class="line">        <span class="string">"_source"</span>: &#123;</span><br><span class="line">            <span class="string">"title"</span>: <span class="string">"I'm not happy about the foxes"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>结论：中文和标准分词器，不对英文单词做任何处理（单复数等），查全率低。</p>
+<h3 id="我的最佳配置"><a href="#我的最佳配置" class="headerlink" title="我的最佳配置"></a>我的最佳配置</h3><p>其实最开始创建的索引已经是最佳配置了，在<code>title</code> 下增加<code>cn</code> 和<code>en</code> 两个<code>fields</code>，这样对中文，英文和其他什么乱七八糟文的效果都好点。就像前面说的，<code>title</code> 使用标准分词器，<code>title.cn</code> 使用<code>ik</code>分词器，<code>title.en</code> 使用自带的英文分词器，每次搜索同时覆盖。</p>
+<h4 id="热词更新配置"><a href="#热词更新配置" class="headerlink" title="热词更新配置"></a>热词更新配置</h4><p>网络词语日新月异，如何让新出的网络热词（或特定的词语）实时的更新到我们的搜索当中呢<br>先用 ik 测试一下 ：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">POST http:<span class="comment">//192.168.159.159:9200/index1/_analyze?analyzer=ik_max_word</span></span><br><span class="line">成龙原名陈港生</span><br></pre></td></tr></table></figure></p>
+<p>返回结果</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">"tokens"</span> : [ &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"成龙"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">1</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">3</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_WORD"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">0</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"原名"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">3</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">5</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_WORD"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">1</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"陈"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">5</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">6</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_CHAR"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">2</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"港"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">6</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">7</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_WORD"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">3</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"生"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">7</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">8</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_CHAR"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">4</span></span><br><span class="line">  &#125; ]</span><br><span class="line">&#125;</span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+<p>比如ik 的主词典中没有”陈港生” 这个词，所以被拆分了。<br>现在我们来配置一下<br>修改 IK 的配置文件 ：ES 目录<code>/plugins/ik/config/ik/IKAnalyzer.cfg.xml</code><br>修改如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span>?&gt;</span><br><span class="line">&lt;!DOCTYPE properties SYSTEM <span class="string">"http://java.sun.com/dtd/properties.dtd"</span>&gt;  </span><br><span class="line">&lt;properties&gt;  </span><br><span class="line">    &lt;comment&gt;IK Analyzer 扩展配置&lt;/comment&gt;</span><br><span class="line">    &lt;!--用户可以在这里配置自己的扩展字典 --&gt;    </span><br><span class="line">    &lt;entry key="ext_dict"&gt;custom/mydict.dic;custom/single_word_low_freq.dic&lt;/entry&gt;     </span><br><span class="line">     &lt;!--用户可以在这里配置自己的扩展停止词字典--&gt;</span><br><span class="line">    &lt;entry key="ext_stopwords"&gt;custom/ext_stopword.dic&lt;/entry&gt;</span><br><span class="line">    &lt;!--用户可以在这里配置远程扩展字典 --&gt; </span><br><span class="line">    &lt;entry key=<span class="string">"remote_ext_dict"</span>&gt;http:<span class="comment">//192.168.1.136/hotWords.php&lt;/entry&gt;</span></span><br><span class="line">    &lt;!--用户可以在这里配置远程扩展停止词字典--&gt;</span><br><span class="line">    &lt;!-- &lt;entry key="remote_ext_stopwords"&gt;words_location&lt;/entry&gt; --&gt;</span><br><span class="line">&lt;/properties&gt;</span><br></pre></td></tr></table></figure>
+<p>这里我是用的是远程扩展字典，因为可以使用其他程序调用更新，且不用重启 ES，很方便；当然使用自定义的 mydict.dic 字典也是很方便的，一行一个词，自己加就可以了<br>既然是远程词典，那么就要是一个可访问的链接，可以是一个页面，也可以是一个txt的文档，但要保证输出的内容是 utf-8 的格式<br>hotWords.php 的内容<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> $s = &lt;&lt;&lt;<span class="string">'EOF'</span></span><br><span class="line">陈港生</span><br><span class="line">元楼</span><br><span class="line">蓝瘦</span><br><span class="line">EOF;</span><br><span class="line">header(<span class="string">'Last-Modified: '</span>.gmdate(<span class="string">'D, d M Y H:i:s'</span>, time()).<span class="string">' GMT'</span>, <span class="keyword">true</span>, <span class="number">200</span>);</span><br><span class="line">header(<span class="string">'ETag: "5816f349-19"'</span>);</span><br><span class="line">echo $s;</span><br></pre></td></tr></table></figure></p>
+<p>现在再测试一下，就可以看到 ik 分词器已经匹配到了 “陈港生” 这个词<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="string">"token"</span> : <span class="string">"陈港生"</span>,</span><br><span class="line">    <span class="string">"start_offset"</span> : <span class="number">5</span>,</span><br><span class="line">    <span class="string">"end_offset"</span> : <span class="number">8</span>,</span><br><span class="line">    <span class="string">"type"</span> : <span class="string">"CN_WORD"</span>,</span><br><span class="line">    <span class="string">"position"</span> : <span class="number">2</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>至此我们已经完成ES的中文分词配置，大家可以根据实际需求进行具体配置，如有问题请积极指出，大家一起讨论学习！</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/">Elasticsearch 系列指南（三）——集成ik分词器</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
+        <p><span>发布时间:</span>2018-08-01, 13:34:10</p>
+        <p><span>最后更新:</span>2018-08-01, 17:01:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/" title="Elasticsearch 系列指南（三）——集成ik分词器">http://localhost:4000/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/">
+                    Elasticsearch 系列指南（二）——基本用法
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#分词器对比："><span class="toc-number">1.</span> <span class="toc-text">分词器对比：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ik安装："><span class="toc-number">2.</span> <span class="toc-text">ik安装：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用准备：创建数据，录入测试数据"><span class="toc-number">3.</span> <span class="toc-text">使用准备：创建数据，录入测试数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#搜索关键词“最新”和“fox”"><span class="toc-number">4.</span> <span class="toc-text">搜索关键词“最新”和“fox”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#我的最佳配置"><span class="toc-number">5.</span> <span class="toc-text">我的最佳配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#热词更新配置"><span class="toc-number">5.1.</span> <span class="toc-text">热词更新配置</span></a></li></ol></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Elasticsearch 系列指南（三）——集成ik分词器　| Xiao Ma Ge　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section class="youyan" id="comments">
+    <script>
+        var loadComment = function(){
+            var d = document, s = d.createElement('script');
+            s.src = 'http://v2.uyan.cc/code/uyan.js?uid=2150761';
+            (d.head || d.body).appendChild(s);
+        }
+    </script>
+    
+    <script> loadComment(); </script>
+
+    <div id="uyan_frame"></div>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/" title="下一篇: Elasticsearch 系列指南（二）——基本用法">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/">Elasticsearch 系列指南（三）——集成ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/">Elasticsearch 系列指南（二）——基本用法</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2017-2018 Xiao Ma Ge
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

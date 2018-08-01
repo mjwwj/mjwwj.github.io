@@ -23,12 +23,12 @@
 <meta property="og:site_name" content="Xiao Ma Ge">
 <meta property="og:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://localhost:4000/2018/07/21/MySql索引原理及使用/b+tree.png">
-<meta property="og:updated_time" content="2018-07-31T15:24:47.000Z">
+<meta property="og:image" content="http://localhost:4000/images/b+tree.png">
+<meta property="og:updated_time" content="2018-08-01T09:00:50.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySql索引原理及使用">
 <meta name="twitter:description" content="索引用于快速查找出在某个列中有一特定值的行，不适用索引，MySQL必须从第一条记录开始读完整个表，直到找到相关行。表越大，查询数据花费的时间越多。如果表中查询的列有一个索引，MySQL能快速达到某个位置去搜索文件，而不必查看所有数据。因此使用索引是数据库优化最直接有效的方式，所以了解索引对于开发人员尤为重要。">
-<meta name="twitter:image" content="http://localhost:4000/2018/07/21/MySql索引原理及使用/b+tree.png">
+<meta name="twitter:image" content="http://localhost:4000/images/b+tree.png">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -338,7 +338,7 @@
 <p> <strong>二 磁盘IO与预读</strong></p>
 <p>考虑到磁盘IO是非常高昂的操作，计算机操作系统做了一些优化，当一次IO时，不光把当前磁盘地址的数据，而是把相邻的数据也都读取到内存缓冲区内，因为局部预读性原理告诉我们，当计算机访问一个地址的数据的时候，与其相邻的数据也会很快被访问到。每一次IO读取的数据我们称之为一页(page)。具体一页有多大数据跟操作系统有关，一般为4k或8k，也就是我们读取一页内的数据时候，实际上才发生了一次IO，这个理论对于索引的数据结构设计非常有帮助。</p>
 <p><strong>三、索引的数据结构</strong><br>任何一种数据结构都不是凭空产生的，一定会有它的背景和使用场景，我们现在总结一下，我们需要这种数据结构能够做些什么，其实很简单，那就是：每次查找数据时把磁盘IO次数控制在一个很小的数量级，最好是常数数量级。那么我们就想到如果一个高度可控的多路搜索树是否能满足需求呢？就这样，b+树应运而生。</p>
-<p><img src="b+tree.png" alt=""></p>
+<p><img src="/images/b+tree.png" alt=""></p>
 <p>如上图，是一颗b+树，关于b+树的定义可以参见B+树，这里只说一些重点，浅蓝色的块我们称之为一个磁盘块，可以看到每个磁盘块包含几个数据项（深蓝色所示）和指针（黄色所示），如磁盘块1包含数据项17和35，包含指针P1、P2、P3，P1表示小于17的磁盘块，P2表示在17和35之间的磁盘块，P3表示大于35的磁盘块。真实的数据存在于叶子节点即3、5、9、10、13、15、28、29、36、60、75、79、90、99。非叶子节点只不存储真实的数据，只存储指引搜索方向的数据项，如17、35并不真实存在于数据表中。</p>
 <p><strong>b+树的查找过程</strong></p>
 <p>如图所示，如果要查找数据项29，那么首先会把磁盘块1由磁盘加载到内存，此时发生一次IO，在内存中用二分查找确定29在17和35之间，锁定磁盘块1的P2指针，内存时间因为非常短（相比磁盘的IO）可以忽略不计，通过磁盘块1的P2指针的磁盘地址把磁盘块3由磁盘加载到内存，发生第二次IO，29在26和30之间，锁定磁盘块3的P2指针，通过指针加载磁盘块8到内存，发生第三次IO，同时内存中做二分查找找到29，结束查询，总计三次IO。真实的情况是，3层的b+树可以表示上百万的数据，如果上百万的数据查找只需要三次IO，性能提高将是巨大的，如果没有索引，每个数据项都要发生一次IO，那么总共需要百万次的IO，显然成本非常非常高。</p>
@@ -355,36 +355,36 @@
 <p>CREATE TABLE table_name [col_name data_type]</p>
 <p>[UNIQUE | FULLTEXT | SPATITAL] [INDEX | KEY] [index_name] (col_name [length]) [ASC | DESC]</p>
 <p><strong>1.创建普通索引</strong></p>
-<p>最基本的索引类型，没有唯一性之类的限制，其作用只是加快对数据库的访问速度。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE book</span><br><span class="line">(</span><br><span class="line">book_id                        INT NOT NULL,</span><br><span class="line">book_name                      VARCHAR(255) NOT NULL,</span><br><span class="line">info                           VARCHAR(255) NOT NULL,</span><br><span class="line">INDEX(info)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>最基本的索引类型，没有唯一性之类的限制，其作用只是加快对数据库的访问速度。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE book</span><br><span class="line">(</span><br><span class="line">book_id                        INT NOT NULL,</span><br><span class="line"><span class="function">book_name                      <span class="title">VARCHAR</span><span class="params">(<span class="number">255</span>)</span> NOT NULL,</span></span><br><span class="line"><span class="function">info                           <span class="title">VARCHAR</span><span class="params">(<span class="number">255</span>)</span> NOT NULL,</span></span><br><span class="line"><span class="function"><span class="title">INDEX</span><span class="params">(info)</span></span></span><br><span class="line"><span class="function">)</span>;</span><br></pre></td></tr></table></figure></p>
 <p>没有指定索引名称时会默认使用索引字段作为索引名称，此处为给字段info创建名称为info索引。</p>
 <p><strong>2.创建唯一索引</strong></p>
-<p>创建唯一索引的主要原因是减少查询索引列操作的执行时间，尤其是对比较庞大的数据表，它与前面的普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t1</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">UNIQUE INDEX UniqIdx(id)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>创建唯一索引的主要原因是减少查询索引列操作的执行时间，尤其是对比较庞大的数据表，它与前面的普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t1</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line"><span class="function">name                      <span class="title">CHAR</span><span class="params">(<span class="number">30</span>)</span> NOT NULL,</span></span><br><span class="line"><span class="function">UNIQUE INDEX <span class="title">UniqIdx</span><span class="params">(id)</span></span></span><br><span class="line"><span class="function">)</span>;</span><br></pre></td></tr></table></figure></p>
 <p>此处为给id字段创建一个名为UniqIdx的唯一索引。</p>
 <p><strong>3.创建单列索引</strong></p>
-<p>单列索引是在数据表中某一个字段上创建的索引，一个表中可以创建多个单列索引，前面两个例子创建的都为单列索引<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t2</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NULL,</span><br><span class="line">INDEX SingleIdx(name(20))</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>单列索引是在数据表中某一个字段上创建的索引，一个表中可以创建多个单列索引，前面两个例子创建的都为单列索引<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t2</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line"><span class="function">name                      <span class="title">CHAR</span><span class="params">(<span class="number">30</span>)</span> NULL,</span></span><br><span class="line"><span class="function">INDEX <span class="title">SingleIdx</span><span class="params">(name(<span class="number">20</span>)</span>)</span></span><br><span class="line"><span class="function">)</span>;</span><br></pre></td></tr></table></figure></p>
 <p>此处为给name字段创建一个名为SingleIdx的单列索引，索引长度为20。</p>
 <p><strong>4.创建组合索引</strong></p>
 <p>组合索引是在多个字段上创建一个索引<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t3</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">age                       INT NOT NULL,                      </span><br><span class="line">info                      VARCHAR(255),</span><br><span class="line">INDEX MultiIdx(id, name, age(100))</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
 <p>此处为给id,name和age字段创建一个名为MultiIdx的组合索引。</p>
 <p>组合索引可起几个索引的作用，但必须遵从“最左前缀”：利用索引中最左边的列集来匹配行。例如这里又id，name和age 3个字段构成的索引，索引行中按id/name/age的顺序存放，索引可以搜索下面字段组合：（id，name，age）、(id，name) 或者 id。如果列不构成索引最左面的前缀，MySQL不能使用局部索引，如（age）或者（name，age）组合则不能使用索引查询。</p>
 <p><strong>5.创建全文索引</strong></p>
-<p>FullText（全文索引）可以用于全文搜索。只有MyISAM存储引擎支持FullText索引，并且只为CHAR、VARCHAR和TEXT列创建索引。索引总是对整个列进行，不支持局部（前缀）索引。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t4</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line">name                      CHAR(30) NOT NULL,</span><br><span class="line">age                       INT NOT NULL,                      </span><br><span class="line">info                      VARCHAR(255),</span><br><span class="line">FULLTEXT INDEX FullTxtIdx(info)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p>FullText（全文索引）可以用于全文搜索。只有MyISAM存储引擎支持FullText索引，并且只为CHAR、VARCHAR和TEXT列创建索引。索引总是对整个列进行，不支持局部（前缀）索引。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t4</span><br><span class="line">(</span><br><span class="line">id                        INT NOT NULL,</span><br><span class="line"><span class="function">name                      <span class="title">CHAR</span><span class="params">(<span class="number">30</span>)</span> NOT NULL,</span></span><br><span class="line"><span class="function">age                       INT NOT NULL,                      </span></span><br><span class="line"><span class="function">info                      <span class="title">VARCHAR</span><span class="params">(<span class="number">255</span>)</span>,</span></span><br><span class="line"><span class="function">FULLTEXT INDEX <span class="title">FullTxtIdx</span><span class="params">(info)</span></span></span><br><span class="line"><span class="function">) ENGINE</span>=MyISAM;</span><br></pre></td></tr></table></figure></p>
 <p>此处为给info字段创建一个名为FullTxtIdx的组合索引，索引长度为20，全文索引非常适合于大型数据集，对于小的数据集，它的用处比较小。</p>
 <p><strong>6.创建空间索引</strong></p>
-<p>空间索引必须在MyISAM类型的表中创建，且空间类型的字段必须为非空。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t5</span><br><span class="line">(</span><br><span class="line">g                        GEOMETRY NOT NULL,</span><br><span class="line">SPATIAL                  INDEX spatIdx(g)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p>空间索引必须在MyISAM类型的表中创建，且空间类型的字段必须为非空。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE t5</span><br><span class="line">(</span><br><span class="line">g                        GEOMETRY NOT NULL,</span><br><span class="line"><span class="function">SPATIAL                  INDEX <span class="title">spatIdx</span><span class="params">(g)</span></span></span><br><span class="line"><span class="function">) ENGINE</span>=MyISAM;</span><br></pre></td></tr></table></figure></p>
 <p>此处为g字段上创建了名为spatIdx的空间索引，注意创建时指定空间类型字段值的非空约束，并且表的存储引擎为MyISAM。</p>
 <p><strong>在已经存在的表上创建索引</strong></p>
 <p><strong>1.使用 ALTER TABLE 语句创建索引</strong></p>
 <p>语法结构：</p>
 <p>ALTER TABLE table_name ADD [UNIQUE | FULLTEXT | SPATIAL] [INDEX | KEY]</p>
 <p>[index_name] (col_name[length],…) [ASC | DESC]</p>
-<p>例如：使用ALTER TABLE在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE book ADD INDEX BkNameIdx(bookname(30));</span><br></pre></td></tr></table></figure></p>
+<p>例如：使用ALTER TABLE在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ALTER TABLE book ADD INDEX <span class="title">BkNameIdx</span><span class="params">(bookname(<span class="number">30</span>)</span>)</span>;</span><br></pre></td></tr></table></figure></p>
 <p>其他类型的索引只需将INDEX换成其他类型即可如：UNIQUE INDEX，FULLTEXT INDEX，SPATIAL INDEX。</p>
 <p><strong>2.使用 CREATE INDEX 创建索引</strong></p>
 <p>语法结构：</p>
 <p>CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name</p>
 <p>ON table_name (col_name[length],…) [ASC | DESC]</p>
-<p>例如：使用CREATE INDEX在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX BkNameIdx ON book(bookname)</span><br></pre></td></tr></table></figure></p>
+<p>例如：使用CREATE INDEX在bookname字段上添加名为BkNameIdx索引，SQL语句如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">CREATE INDEX BkNameIdx ON <span class="title">book</span><span class="params">(bookname)</span></span></span><br></pre></td></tr></table></figure></p>
 <p>其他类型的索引只需将INDEX换成其他类型即可如：UNIQUE INDEX，FULLTEXT INDEX，SPATIAL INDEX。</p>
 <p><strong>删除索引</strong><br><strong>1.使用ALTER TABLE删除索引</strong></p>
 <p>语法结构：ALTER TABLE table_name DROP INDEX index_name;</p>
@@ -402,7 +402,7 @@
         <p><span>本文标题:</span><a href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Xiao Ma Ge</a></p>
         <p><span>发布时间:</span>2018-07-21, 14:04:51</p>
-        <p><span>最后更新:</span>2018-07-31, 23:24:47</p>
+        <p><span>最后更新:</span>2018-08-01, 17:00:50</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2018/07/21/MySql索引原理及使用/" title="MySql索引原理及使用">http://localhost:4000/2018/07/21/MySql索引原理及使用/</a>
             <span class="copy-path" data-clipboard-text="原文: http://localhost:4000/2018/07/21/MySql索引原理及使用/　　作者: Xiao Ma Ge" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -522,7 +522,7 @@
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/lasticsearch-系列指南（三）——集成ik分词器/">Elasticsearch 系列指南（三）——集成ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/01/Elasticsearch-系列指南（二）——基本用法/">Elasticsearch 系列指南（二）——基本用法</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/31/系列指南（一）——安装配置/">elasticsearch系列指南（一）——安装配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/21/MySql索引原理及使用/">MySql索引原理及使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/AngularValidate/">Hello World</a></li></ul>
 
 
 
